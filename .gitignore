@@ -1,0 +1,15 @@
+# Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# macOS
+.DS_Store
+
+# Testing
+.tests/
+
+# Local development
+.local/
+.env
