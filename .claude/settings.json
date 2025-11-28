@@ -1,0 +1,14 @@
+{
+  "name": "agentic.nvim",
+  "description": "Dual-agent agentic workflow plugin for Neovim",
+  "version": "0.1.0",
+  "permissions": {
+    "allow_read": true,
+    "allow_write": true,
+    "allow_execute": true
+  },
+  "tools": {
+    "run_gemini": "./tools/run_gemini.json",
+    "run_claude": "./tools/run_claude.json"
+  }
+}

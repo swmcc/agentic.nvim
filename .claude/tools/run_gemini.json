@@ -1,0 +1,26 @@
+{
+  "name": "run_gemini",
+  "description": "Execute Gemini CLI with a prompt",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "prompt": {
+        "type": "string",
+        "description": "The prompt to send to Gemini"
+      },
+      "context": {
+        "type": "string",
+        "description": "Optional context to include with the prompt"
+      },
+      "working_directory": {
+        "type": "string",
+        "description": "Working directory for the command"
+      }
+    },
+    "required": ["prompt"]
+  },
+  "command": {
+    "type": "shell",
+    "command": "gemini -p \"{{context}}\\n\\n{{prompt}}\""
+  }
+}
