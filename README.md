@@ -1,6 +1,16 @@
-# agentic.nvim
+# Pamoja
 
-A dual-agent agentic workflow plugin for Neovim with Claude Code and Gemini CLI support.
+**Pamoja** (Swahili for "together") — a dual-agent agentic workflow plugin for Neovim with Claude Code and Gemini CLI support.
+
+## Why "Pamoja"?
+
+The name reflects the core philosophy of this plugin: **working together**. Rather than being locked into a single AI provider, Pamoja brings multiple agents together under one unified interface. Claude and Gemini work alongside each other — and alongside you — as collaborative partners in your coding workflow.
+
+- **Together with your editor**: Seamless Neovim integration
+- **Together across providers**: Switch between Claude and Gemini instantly
+- **Together on complex tasks**: Multi-step workflows that coordinate agent capabilities
+
+One interface. Multiple agents. Working *pamoja*.
 
 ## Features
 
@@ -24,9 +34,9 @@ A dual-agent agentic workflow plugin for Neovim with Claude Code and Gemini CLI 
 
 ```lua
 {
-  "yourusername/agentic.nvim",
+  "swmcc/pamoja.nvim",
   config = function()
-    require("agentic").setup({
+    require("pamoja").setup({
       default_provider = "claude",
     })
   end,
@@ -37,9 +47,9 @@ A dual-agent agentic workflow plugin for Neovim with Claude Code and Gemini CLI 
 
 ```lua
 use {
-  "yourusername/agentic.nvim",
+  "swmcc/pamoja.nvim",
   config = function()
-    require("agentic").setup({
+    require("pamoja").setup({
       default_provider = "claude",
     })
   end,
@@ -49,7 +59,7 @@ use {
 ## Configuration
 
 ```lua
-require("agentic").setup({
+require("pamoja").setup({
   -- Default AI provider: "claude" or "gemini"
   default_provider = "claude",
 
@@ -75,11 +85,11 @@ require("agentic").setup({
 
   -- Optional keymaps
   keymaps = {
-    ask = "<leader>aa",
-    summarize = "<leader>as",
-    refactor = "<leader>ar",
-    generate = "<leader>ag",
-    task = "<leader>at",
+    ask = "<leader>pa",
+    summarize = "<leader>ps",
+    refactor = "<leader>pr",
+    generate = "<leader>pg",
+    task = "<leader>pt",
   },
 })
 ```
@@ -88,57 +98,57 @@ require("agentic").setup({
 
 | Command | Description |
 |---------|-------------|
-| `:AgenticAsk [prompt]` | Ask the agent a question |
-| `:AgenticSummarize` | Summarize selected text (visual mode) |
-| `:AgenticRefactor [instruction]` | Refactor selected code |
-| `:AgenticGenerate [description]` | Generate new code |
-| `:AgenticTask [description]` | Run a multi-step task |
-| `:AgenticUse {provider}` | Switch to claude or gemini |
-| `:AgenticStatus` | Show current provider status |
-| `:AgenticCancel` | Cancel running operation |
+| `:PamojaAsk [prompt]` | Ask the agent a question |
+| `:PamojaSummarize` | Summarize selected text (visual mode) |
+| `:PamojaRefactor [instruction]` | Refactor selected code |
+| `:PamojaGenerate [description]` | Generate new code |
+| `:PamojaTask [description]` | Run a multi-step task |
+| `:PamojaUse {provider}` | Switch to claude or gemini |
+| `:PamojaStatus` | Show current provider status |
+| `:PamojaCancel` | Cancel running operation |
 
 ## Usage Examples
 
 ### Ask a Question
 
 ```vim
-:AgenticAsk How do I implement binary search in Lua?
+:PamojaAsk How do I implement binary search in Lua?
 ```
 
 ### Summarize Selection
 
 ```vim
 " Select code visually, then:
-:'<,'>AgenticSummarize
+:'<,'>PamojaSummarize
 ```
 
 ### Refactor Code
 
 ```vim
 " Select function, then:
-:'<,'>AgenticRefactor Extract the loop into a separate function
+:'<,'>PamojaRefactor Extract the loop into a separate function
 
 " Or refactor entire file:
-:AgenticRefactor Add error handling to all functions
+:PamojaRefactor Add error handling to all functions
 ```
 
 ### Generate Code
 
 ```vim
-:AgenticGenerate Create a Lua module for parsing CSV files
+:PamojaGenerate Create a Lua module for parsing CSV files
 ```
 
 ### Multi-File Task
 
 ```vim
-:AgenticTask Rename the User class to Account across the codebase
+:PamojaTask Rename the User class to Account across the codebase
 ```
 
 ### Switch Provider
 
 ```vim
-:AgenticUse gemini
-:AgenticStatus
+:PamojaUse gemini
+:PamojaStatus
 ```
 
 ## Architecture
