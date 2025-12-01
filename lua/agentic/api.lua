@@ -143,10 +143,8 @@ function M.ask(opts, callback)
       return
     end
 
-    -- Display result
-    ui.append_to_buffer(output_buf, result.content)
+    ui.show_response(result.content)
 
-    -- Apply changes if requested and available
     if opts.apply_changes and result.changes then
       M.apply_changes(result)
     end

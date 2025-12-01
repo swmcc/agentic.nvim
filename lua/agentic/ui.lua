@@ -109,6 +109,23 @@ function M.close_output()
   close_float()
 end
 
+function M.show_response(content)
+  close_float()
+
+  local buf, win = create_float({
+    title = "Pamoja",
+    filetype = "markdown",
+  })
+
+  state.buf = buf
+  state.win = win
+
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(content, "\n"))
+  vim.bo[buf].modifiable = false
+
+  set_float_keymaps(buf)
+end
+
 function M.show_error(message)
   vim.notify(message, vim.log.levels.ERROR, { title = "Pamoja" })
 end
