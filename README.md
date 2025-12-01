@@ -1,6 +1,12 @@
-# Pamoja
+<p align="center">
+  <img src="assets/logo.png" alt="Pamoja" width="200">
+</p>
 
-**Pamoja** (Swahili for "together") — a dual-agent agentic workflow plugin for Neovim with Claude Code and Gemini CLI support.
+<h1 align="center">Pamoja</h1>
+
+<p align="center">
+  <strong>Pamoja</strong> (Swahili for "together") — a dual-agent agentic workflow plugin for Neovim with Claude Code and Gemini CLI support.
+</p>
 
 ## Why "Pamoja"?
 
