@@ -91,23 +91,16 @@ function M._create_split_window(buf, opts)
   return create_float(opts)
 end
 
-function M.append_to_buffer(buf, content)
+function M.append_to_buffer(_, content)
+  local buf = state.buf
   if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
 
   vim.bo[buf].modifiable = true
   local lines = vim.split(content, "\n")
-  local line_count = vim.api.nvim_buf_line_count(buf)
-  local first_line = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
-
-  if first_line == "" and line_count == 1 then
-    vim.api.nvim_buf_set_lines(buf, 0, 1, false, lines)
-  else
-    vim.api.nvim_buf_set_lines(buf, -1, -1, false, lines)
-  end
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 
   if state.win and vim.api.nvim_win_is_valid(state.win) then
-    local new_count = vim.api.nvim_buf_line_count(buf)
-    vim.api.nvim_win_set_cursor(state.win, { new_count, 0 })
+    vim.api.nvim_win_set_cursor(state.win, { 1, 0 })
   end
   vim.bo[buf].modifiable = false
 end
