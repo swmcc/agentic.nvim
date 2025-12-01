@@ -89,7 +89,9 @@ function Claude:ask(prompt, context, callback)
   local function safe_callback(result)
     if callback_called then return end
     callback_called = true
-    callback(result)
+    vim.schedule(function()
+      callback(result)
+    end)
   end
 
   self.job = vim.fn.jobstart(

@@ -56,6 +56,15 @@ function Gemini:ask(prompt, context, callback)
   local args = self:build_args(prompt, context)
   local output_lines = {}
   local error_lines = {}
+  local callback_called = false
+
+  local function safe_callback(result)
+    if callback_called then return end
+    callback_called = true
+    vim.schedule(function()
+      callback(result)
+    end)
+  end
 
   self.job = vim.fn.jobstart(
     vim.list_extend({ self.opts.cmd }, args),
@@ -82,7 +91,7 @@ function Gemini:ask(prompt, context, callback)
         self.job = nil
 
         if exit_code ~= 0 then
-          callback({
+          safe_callback({
             error = table.concat(error_lines, "\n"),
             exit_code = exit_code,
           })
@@ -91,20 +100,19 @@ function Gemini:ask(prompt, context, callback)
 
         local output = table.concat(output_lines, "\n")
         local result = self:parse_output(output)
-        callback(result)
+        safe_callback(result)
       end,
       stdout_buffered = false,
       stderr_buffered = false,
     }
   )
 
-  -- Set up timeout
   if self.opts.timeout > 0 then
-    vim.defer_fn(function()
+    self.timeout_timer = vim.defer_fn(function()
       if self.job then
         vim.fn.jobstop(self.job)
         self.job = nil
-        callback({ error = "Request timed out" })
+        safe_callback({ error = "Request timed out", timed_out = true })
       end
     end, self.opts.timeout)
   end
