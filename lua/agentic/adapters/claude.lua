@@ -26,6 +26,32 @@ function Claude:is_available()
   return vim.fn.executable(self.opts.cmd) == 1
 end
 
+--- Parse error messages for known error types
+---@param error_msg string Raw error message
+---@param exit_code number Exit code from process
+---@return string Formatted error message
+function Claude:parse_error(error_msg, exit_code)
+  local lower = error_msg:lower()
+
+  if lower:match("not logged in") or lower:match("authentication") or lower:match("unauthorized") or lower:match("api key") then
+    return "Authentication required. Run 'claude login' to authenticate."
+  end
+
+  if lower:match("rate limit") then
+    return "Rate limited. Please wait before trying again."
+  end
+
+  if lower:match("network") or lower:match("connection") then
+    return "Network error. Check your internet connection."
+  end
+
+  if error_msg == "" then
+    return string.format("Command failed with exit code %d", exit_code)
+  end
+
+  return error_msg
+end
+
 --- Build command arguments for Claude CLI
 ---@param prompt string The prompt
 ---@param context table The context
@@ -58,6 +84,13 @@ function Claude:ask(prompt, context, callback)
   local args = self:build_args(prompt, context)
   local output_lines = {}
   local error_lines = {}
+  local callback_called = false
+
+  local function safe_callback(result)
+    if callback_called then return end
+    callback_called = true
+    callback(result)
+  end
 
   self.job = vim.fn.jobstart(
     vim.list_extend({ self.opts.cmd }, args),
@@ -84,8 +117,9 @@ function Claude:ask(prompt, context, callback)
         self.job = nil
 
         if exit_code ~= 0 then
-          callback({
-            error = table.concat(error_lines, "\n"),
+          local error_msg = table.concat(error_lines, "\n")
+          safe_callback({
+            error = self:parse_error(error_msg, exit_code),
             exit_code = exit_code,
           })
           return
@@ -93,20 +127,19 @@ function Claude:ask(prompt, context, callback)
 
         local output = table.concat(output_lines, "\n")
         local result = self:parse_output(output)
-        callback(result)
+        safe_callback(result)
       end,
       stdout_buffered = false,
       stderr_buffered = false,
     }
   )
 
-  -- Set up timeout
   if self.opts.timeout > 0 then
-    vim.defer_fn(function()
+    self.timeout_timer = vim.defer_fn(function()
       if self.job then
         vim.fn.jobstop(self.job)
         self.job = nil
-        callback({ error = "Request timed out" })
+        safe_callback({ error = "Request timed out", timed_out = true })
       end
     end, self.opts.timeout)
   end
@@ -193,6 +226,11 @@ function Claude:run_workflow(workflow_name, state, callback)
   end
 
   self:ask(full_prompt, state.context or {}, callback)
+end
+
+function Claude:cancel()
+  self.timeout_timer = nil
+  Base.cancel(self)
 end
 
 return Claude
