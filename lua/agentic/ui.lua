@@ -32,8 +32,6 @@ local function create_float(opts)
     border = "rounded",
     title = opts.title and (" " .. opts.title .. " ") or nil,
     title_pos = "center",
-    footer = opts.footer and (" " .. opts.footer .. " ") or nil,
-    footer_pos = "center",
   }
 
   local win = vim.api.nvim_open_win(buf, true, win_opts)
@@ -74,7 +72,6 @@ function M.create_output_buffer(opts)
 
   local buf, win = create_float({
     title = opts.title or "Pamoja",
-    footer = "q/Esc: close",
     filetype = "markdown",
   })
 
@@ -130,13 +127,13 @@ function M.show_status(message)
     "",
     "  " .. message,
     "",
+    "  [q] close",
   }
 
   local buf, win = create_float({
-    title = "Pamoja Status",
-    footer = "q/Esc: close",
-    width = 50,
-    height = 5,
+    title = "Pamoja",
+    width = math.max(#message + 10, 40),
+    height = 6,
   })
 
   state.buf = buf
@@ -209,10 +206,10 @@ function M.show_diff_preview(changes, callback)
     end
     table.insert(lines, "")
   end
+  table.insert(lines, "  [y] accept  [n/q] reject")
 
   local buf, win = create_float({
     title = "Review Changes",
-    footer = "y: accept  n/q: reject",
     filetype = "diff",
   })
 
@@ -240,7 +237,6 @@ function M.create_code_buffer(content, filetype)
 
   local buf, win = create_float({
     title = "Generated Code",
-    footer = "q: close",
     filetype = filetype or "lua",
   })
 
@@ -260,7 +256,6 @@ function M.open_prompt_input(opts)
 
   local buf, win = create_float({
     title = opts.title or "Prompt",
-    footer = "Enter: submit  Esc: cancel",
     width = math.floor(vim.o.columns * 0.6),
     height = 10,
   })
@@ -299,10 +294,10 @@ function M.select_provider(providers, callback)
     table.insert(lines, string.format("  [%d] %s", i, provider))
   end
   table.insert(lines, "")
+  table.insert(lines, "  [q] cancel")
 
   local buf, win = create_float({
     title = "Select Provider",
-    footer = "1-9: select  q: cancel",
     width = 40,
     height = #lines + 2,
   })
