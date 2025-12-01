@@ -32,20 +32,15 @@ end
 --- Switch to a different provider
 ---@param provider "claude"|"gemini"
 function M.switch_provider(provider)
-  -- Cancel any running operation
   if current_job then
     M.cancel()
   end
 
-  -- Update config
   config.set_provider(provider)
 
-  -- Load the appropriate adapter
   local provider_config = config.get_provider_config(provider)
   local adapter_module = require("agentic.adapters." .. provider)
   adapter = adapter_module:new(provider_config)
-
-  vim.notify("Agentic: Switched to " .. provider, vim.log.levels.INFO)
 end
 
 --- Get the current provider name

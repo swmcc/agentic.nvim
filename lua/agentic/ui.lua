@@ -1,101 +1,28 @@
----@mod agentic.ui User interface components
----@brief [[
---- Handles buffer creation, window management, and user interaction.
----@brief ]]
-
 local M = {}
 
 local config = require("agentic.config")
 
----@type number|nil Output buffer number
-local output_buf = nil
+local state = {
+  win = nil,
+  buf = nil,
+  input_win = nil,
+  input_buf = nil,
+}
 
----@type number|nil Output window number
-local output_win = nil
-
---- Create an output buffer for agent responses
----@param opts table Options (title, output type)
----@return number buffer
-function M.create_output_buffer(opts)
+local function create_float(opts)
   opts = opts or {}
-  local output_type = opts.output or config.get("ui.output")
-  local title = opts.title or "Agentic"
+  local width = opts.width or math.floor(vim.o.columns * 0.8)
+  local height = opts.height or math.floor(vim.o.lines * 0.7)
+  local row = math.floor((vim.o.lines - height) / 2) - 1
+  local col = math.floor((vim.o.columns - width) / 2)
 
-  -- Create buffer
   local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(buf, string.format("[%s]", title))
   vim.bo[buf].buftype = "nofile"
   vim.bo[buf].bufhidden = "wipe"
   vim.bo[buf].swapfile = false
-  vim.bo[buf].filetype = "markdown"
+  vim.bo[buf].filetype = opts.filetype or "markdown"
 
-  -- Create window based on output type
-  local win
-
-  if output_type == "float" then
-    win = M._create_float_window(buf, opts)
-  elseif output_type == "tab" then
-    vim.cmd("tabnew")
-    win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(win, buf)
-  else -- split (default)
-    win = M._create_split_window(buf, opts)
-  end
-
-  output_buf = buf
-  output_win = win
-
-  -- Set up buffer keymaps
-  vim.keymap.set("n", "q", function()
-    M.close_output()
-  end, { buffer = buf, desc = "Close output" })
-
-  return buf
-end
-
---- Create a split window
----@param buf number Buffer number
----@param opts table Options
----@return number window
-function M._create_split_window(buf, opts)
-  local direction = config.get("ui.split_direction") or "below"
-  local size = config.get("ui.split_size") or 15
-
-  local split_cmd = {
-    below = "botright split",
-    above = "topleft split",
-    left = "topleft vsplit",
-    right = "botright vsplit",
-  }
-
-  vim.cmd(split_cmd[direction] or "botright split")
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(win, buf)
-
-  -- Set window size
-  if direction == "below" or direction == "above" then
-    vim.api.nvim_win_set_height(win, size)
-  else
-    vim.api.nvim_win_set_width(win, size)
-  end
-
-  return win
-end
-
---- Create a floating window
----@param buf number Buffer number
----@param opts table Options
----@return number window
-function M._create_float_window(buf, opts)
-  local width_ratio = config.get("ui.float_width") or 0.8
-  local height_ratio = config.get("ui.float_height") or 0.6
-
-  local width = math.floor(vim.o.columns * width_ratio)
-  local height = math.floor(vim.o.lines * height_ratio)
-  local row = math.floor((vim.o.lines - height) / 2)
-  local col = math.floor((vim.o.columns - width) / 2)
-
-  local win = vim.api.nvim_open_win(buf, true, {
+  local win_opts = {
     relative = "editor",
     width = width,
     height = height,
@@ -103,190 +30,297 @@ function M._create_float_window(buf, opts)
     col = col,
     style = "minimal",
     border = "rounded",
-    title = opts.title or "Agentic",
+    title = opts.title and (" " .. opts.title .. " ") or nil,
     title_pos = "center",
-  })
+    footer = opts.footer and (" " .. opts.footer .. " ") or nil,
+    footer_pos = "center",
+  }
 
-  return win
+  local win = vim.api.nvim_open_win(buf, true, win_opts)
+
+  vim.wo[win].wrap = true
+  vim.wo[win].linebreak = true
+  vim.wo[win].cursorline = true
+  vim.wo[win].winhighlight = "Normal:Normal,FloatBorder:FloatBorder,CursorLine:Visual"
+
+  return buf, win
 end
 
---- Append content to a buffer
----@param buf number Buffer number
----@param content string Content to append
-function M.append_to_buffer(buf, content)
-  if not vim.api.nvim_buf_is_valid(buf) then
-    return
+local function close_float()
+  if state.win and vim.api.nvim_win_is_valid(state.win) then
+    vim.api.nvim_win_close(state.win, true)
+  end
+  if state.input_win and vim.api.nvim_win_is_valid(state.input_win) then
+    vim.api.nvim_win_close(state.input_win, true)
+  end
+  state.win = nil
+  state.buf = nil
+  state.input_win = nil
+  state.input_buf = nil
+end
+
+local function set_float_keymaps(buf, on_close)
+  local function close()
+    close_float()
+    if on_close then on_close() end
   end
 
+  vim.keymap.set("n", "q", close, { buffer = buf, nowait = true })
+  vim.keymap.set("n", "<Esc>", close, { buffer = buf, nowait = true })
+end
+
+function M.create_output_buffer(opts)
+  close_float()
+
+  local buf, win = create_float({
+    title = opts.title or "Pamoja",
+    footer = "q/Esc: close",
+    filetype = "markdown",
+  })
+
+  state.buf = buf
+  state.win = win
+
+  set_float_keymaps(buf)
+
+  return buf
+end
+
+function M._create_float_window(buf, opts)
+  return create_float(opts)
+end
+
+function M._create_split_window(buf, opts)
+  return create_float(opts)
+end
+
+function M.append_to_buffer(buf, content)
+  if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
+
+  vim.bo[buf].modifiable = true
   local lines = vim.split(content, "\n")
   local line_count = vim.api.nvim_buf_line_count(buf)
-
-  -- Check if buffer is empty
   local first_line = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
+
   if first_line == "" and line_count == 1 then
     vim.api.nvim_buf_set_lines(buf, 0, 1, false, lines)
   else
     vim.api.nvim_buf_set_lines(buf, -1, -1, false, lines)
   end
 
-  -- Scroll to bottom if window is valid
-  if output_win and vim.api.nvim_win_is_valid(output_win) then
+  if state.win and vim.api.nvim_win_is_valid(state.win) then
     local new_count = vim.api.nvim_buf_line_count(buf)
-    vim.api.nvim_win_set_cursor(output_win, { new_count, 0 })
+    vim.api.nvim_win_set_cursor(state.win, { new_count, 0 })
   end
+  vim.bo[buf].modifiable = false
 end
 
---- Close the output buffer/window
 function M.close_output()
-  if output_win and vim.api.nvim_win_is_valid(output_win) then
-    vim.api.nvim_win_close(output_win, true)
-  end
-  output_win = nil
-  output_buf = nil
+  close_float()
 end
 
---- Show an error message
----@param message string Error message
 function M.show_error(message)
-  vim.notify("Agentic Error: " .. message, vim.log.levels.ERROR)
+  vim.notify(message, vim.log.levels.ERROR, { title = "Pamoja" })
 end
 
---- Show a status message
----@param message string Status message
 function M.show_status(message)
-  vim.notify(message, vim.log.levels.INFO)
+  close_float()
+
+  local lines = {
+    "",
+    "  " .. message,
+    "",
+  }
+
+  local buf, win = create_float({
+    title = "Pamoja Status",
+    footer = "q/Esc: close",
+    width = 50,
+    height = 5,
+  })
+
+  state.buf = buf
+  state.win = win
+
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].modifiable = false
+
+  set_float_keymaps(buf)
 end
 
---- Show confirmation dialog
----@param message string Confirmation message
----@param callback fun(confirmed: boolean) Callback with result
 function M.confirm(message, callback)
-  vim.ui.select(
-    { "Yes", "No" },
-    { prompt = message },
-    function(choice)
-      callback(choice == "Yes")
-    end
-  )
+  close_float()
+
+  local lines = {
+    "",
+    "  " .. message,
+    "",
+    "  [y] Yes    [n] No",
+    "",
+  }
+
+  local buf, win = create_float({
+    title = "Confirm",
+    width = math.max(#message + 10, 40),
+    height = 7,
+  })
+
+  state.buf = buf
+  state.win = win
+
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].modifiable = false
+
+  vim.keymap.set("n", "y", function()
+    close_float()
+    callback(true)
+  end, { buffer = buf, nowait = true })
+
+  vim.keymap.set("n", "n", function()
+    close_float()
+    callback(false)
+  end, { buffer = buf, nowait = true })
+
+  vim.keymap.set("n", "q", function()
+    close_float()
+    callback(false)
+  end, { buffer = buf, nowait = true })
+
+  vim.keymap.set("n", "<Esc>", function()
+    close_float()
+    callback(false)
+  end, { buffer = buf, nowait = true })
 end
 
---- Show diff preview for changes
----@param changes table List of changes
----@param callback fun(confirmed: boolean) Callback with result
 function M.show_diff_preview(changes, callback)
   if not changes or #changes == 0 then
     callback(true)
     return
   end
 
-  -- Create diff buffer
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.bo[buf].buftype = "nofile"
-  vim.bo[buf].filetype = "diff"
+  close_float()
 
-  local lines = { "# Proposed Changes", "" }
-
+  local lines = { "" }
   for i, change in ipairs(changes) do
-    table.insert(lines, string.format("## Change %d: %s", i, change.path or "buffer"))
+    table.insert(lines, string.format("  Change %d: %s", i, change.path or "buffer"))
     table.insert(lines, "")
-    table.insert(lines, "```diff")
-
-    if change.type == "replace" then
-      table.insert(lines, string.format("@@ -%d,%d +%d,%d @@",
-        change.start_line, change.end_line - change.start_line + 1,
-        change.start_line, #vim.split(change.content, "\n")
-      ))
-    end
-
     for _, line in ipairs(vim.split(change.content, "\n")) do
-      table.insert(lines, "+ " .. line)
+      table.insert(lines, "  + " .. line)
     end
-
-    table.insert(lines, "```")
     table.insert(lines, "")
   end
+
+  local buf, win = create_float({
+    title = "Review Changes",
+    footer = "y: accept  n/q: reject",
+    filetype = "diff",
+  })
+
+  state.buf = buf
+  state.win = win
 
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].modifiable = false
 
-  -- Create float window
-  local win = M._create_float_window(buf, { title = "Review Changes" })
-
-  -- Set up keymaps for confirmation
   vim.keymap.set("n", "y", function()
-    vim.api.nvim_win_close(win, true)
+    close_float()
     callback(true)
-  end, { buffer = buf, desc = "Accept changes" })
+  end, { buffer = buf, nowait = true })
 
   vim.keymap.set("n", "n", function()
-    vim.api.nvim_win_close(win, true)
+    close_float()
     callback(false)
-  end, { buffer = buf, desc = "Reject changes" })
+  end, { buffer = buf, nowait = true })
 
-  vim.keymap.set("n", "q", function()
-    vim.api.nvim_win_close(win, true)
-    callback(false)
-  end, { buffer = buf, desc = "Cancel" })
-
-  -- Show instructions
-  vim.notify("Press 'y' to accept, 'n' or 'q' to reject", vim.log.levels.INFO)
+  set_float_keymaps(buf, function() callback(false) end)
 end
 
---- Create a new buffer with generated code
----@param content string Generated code content
----@param filetype? string Filetype to set
----@return number buffer
 function M.create_code_buffer(content, filetype)
-  local buf = vim.api.nvim_create_buf(true, false)
+  close_float()
+
+  local buf, win = create_float({
+    title = "Generated Code",
+    footer = "q: close",
+    filetype = filetype or "lua",
+  })
+
+  state.buf = buf
+  state.win = win
 
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(content, "\n"))
+  vim.bo[buf].modifiable = false
 
-  if filetype then
-    vim.bo[buf].filetype = filetype
-  end
-
-  -- Open in split
-  vim.cmd("vsplit")
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(win, buf)
+  set_float_keymaps(buf)
 
   return buf
 end
 
---- Open a prompt input buffer
----@param opts table Options (prompt, callback)
 function M.open_prompt_input(opts)
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.bo[buf].buftype = "nofile"
-  vim.bo[buf].filetype = "markdown"
+  close_float()
 
-  -- Add placeholder text
-  local placeholder = opts.placeholder or "Enter your prompt here..."
+  local buf, win = create_float({
+    title = opts.title or "Prompt",
+    footer = "Enter: submit  Esc: cancel",
+    width = math.floor(vim.o.columns * 0.6),
+    height = 10,
+  })
+
+  state.input_buf = buf
+  state.input_win = win
+
+  vim.bo[buf].modifiable = true
+
+  local placeholder = opts.placeholder or "Enter your prompt..."
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, { placeholder })
+  vim.cmd("startinsert")
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "" })
 
-  -- Create float
-  local win = M._create_float_window(buf, { title = opts.title or "Prompt" })
-
-  -- Select all text
-  vim.cmd("normal! ggVG")
-
-  -- Set up submit keymap
-  vim.keymap.set("n", "<CR>", function()
+  vim.keymap.set({ "n", "i" }, "<CR>", function()
     local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
     local prompt = table.concat(lines, "\n")
-    vim.api.nvim_win_close(win, true)
-
-    if opts.callback then
+    close_float()
+    vim.cmd("stopinsert")
+    if opts.callback and prompt ~= "" then
       opts.callback(prompt)
     end
-  end, { buffer = buf, desc = "Submit prompt" })
+  end, { buffer = buf, nowait = true })
 
-  vim.keymap.set("n", "q", function()
-    vim.api.nvim_win_close(win, true)
-  end, { buffer = buf, desc = "Cancel" })
+  vim.keymap.set({ "n", "i" }, "<Esc>", function()
+    close_float()
+    vim.cmd("stopinsert")
+  end, { buffer = buf, nowait = true })
+end
 
-  vim.keymap.set("n", "<Esc>", function()
-    vim.api.nvim_win_close(win, true)
-  end, { buffer = buf, desc = "Cancel" })
+function M.select_provider(providers, callback)
+  close_float()
+
+  local lines = { "" }
+  for i, provider in ipairs(providers) do
+    table.insert(lines, string.format("  [%d] %s", i, provider))
+  end
+  table.insert(lines, "")
+
+  local buf, win = create_float({
+    title = "Select Provider",
+    footer = "1-9: select  q: cancel",
+    width = 40,
+    height = #lines + 2,
+  })
+
+  state.buf = buf
+  state.win = win
+
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].modifiable = false
+
+  for i, provider in ipairs(providers) do
+    vim.keymap.set("n", tostring(i), function()
+      close_float()
+      callback(provider)
+    end, { buffer = buf, nowait = true })
+  end
+
+  set_float_keymaps(buf)
 end
 
 return M

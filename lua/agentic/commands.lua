@@ -129,15 +129,15 @@ function M.register()
 
     if provider == "" then
       local providers = config.get_available_providers()
-      vim.ui.select(providers, {
-        prompt = "Select AI provider:",
-      }, function(choice)
+      ui.select_provider(providers, function(choice)
         if choice then
           api.switch_provider(choice)
+          ui.show_status("Switched to " .. choice)
         end
       end)
     else
       api.switch_provider(provider)
+      ui.show_status("Switched to " .. provider)
     end
   end, {
     nargs = "?",
@@ -152,12 +152,7 @@ function M.register()
     local provider = api.get_current_provider()
     local ready = api.is_ready()
     local status = ready and "ready" or "not available"
-
-    vim.notify(string.format(
-      "Agentic: Provider '%s' (%s)",
-      provider,
-      status
-    ), vim.log.levels.INFO)
+    ui.show_status(string.format("Provider: %s (%s)", provider, status))
   end, {
     desc = "Show current provider status",
   })
