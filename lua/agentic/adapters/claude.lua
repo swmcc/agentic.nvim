@@ -94,47 +94,39 @@ function Claude:ask(prompt, context, callback)
     end)
   end
 
-  self.job = vim.fn.jobstart(
-    vim.list_extend({ self.opts.cmd }, args),
-    {
-      on_stdout = function(_, data)
-        if data then
-          for _, line in ipairs(data) do
-            if line ~= "" then
-              table.insert(output_lines, line)
-            end
-          end
-        end
-      end,
-      on_stderr = function(_, data)
-        if data then
-          for _, line in ipairs(data) do
-            if line ~= "" then
-              table.insert(error_lines, line)
-            end
-          end
-        end
-      end,
-      on_exit = function(_, exit_code)
-        self.job = nil
+  local cmd = vim.list_extend({ self.opts.cmd }, args)
 
-        if exit_code ~= 0 then
-          local error_msg = table.concat(error_lines, "\n")
-          safe_callback({
-            error = self:parse_error(error_msg, exit_code),
-            exit_code = exit_code,
-          })
-          return
-        end
+  self.job = vim.fn.jobstart(cmd, {
+    stdout_buffered = true,
+    stderr_buffered = true,
+    on_stdout = function(_, data)
+      if data then
+        output_lines = data
+      end
+    end,
+    on_stderr = function(_, data)
+      if data then
+        error_lines = data
+      end
+    end,
+    on_exit = function(_, exit_code)
+      self.job = nil
 
-        local output = table.concat(output_lines, "\n")
-        local result = self:parse_output(output)
-        safe_callback(result)
-      end,
-      stdout_buffered = false,
-      stderr_buffered = false,
-    }
-  )
+      local output = table.concat(output_lines, "\n")
+      local errors = table.concat(error_lines, "\n")
+
+      if exit_code ~= 0 then
+        safe_callback({
+          error = self:parse_error(errors, exit_code),
+          exit_code = exit_code,
+        })
+        return
+      end
+
+      local result = self:parse_output(output)
+      safe_callback(result)
+    end,
+  })
 
   if self.opts.timeout > 0 then
     self.timeout_timer = vim.defer_fn(function()
