@@ -82,8 +82,10 @@ function Claude:ask(prompt, context, callback)
   end
 
   local args = self:build_args(prompt, context)
-  local output_lines = {}
-  local error_lines = {}
+  local stdout = vim.loop.new_pipe(false)
+  local stderr = vim.loop.new_pipe(false)
+  local output_chunks = {}
+  local error_chunks = {}
   local callback_called = false
 
   local function safe_callback(result)
@@ -94,45 +96,52 @@ function Claude:ask(prompt, context, callback)
     end)
   end
 
-  local cmd = vim.list_extend({ self.opts.cmd }, args)
+  local handle
+  handle, _ = vim.loop.spawn(self.opts.cmd, {
+    args = args,
+    stdio = { nil, stdout, stderr },
+  }, function(code)
+    stdout:close()
+    stderr:close()
+    handle:close()
+    self.handle = nil
 
-  self.job = vim.fn.jobstart(cmd, {
-    stdout_buffered = true,
-    stderr_buffered = true,
-    on_stdout = function(_, data)
-      if data then
-        output_lines = data
-      end
-    end,
-    on_stderr = function(_, data)
-      if data then
-        error_lines = data
-      end
-    end,
-    on_exit = function(_, exit_code)
-      self.job = nil
+    local output = table.concat(output_chunks, "")
+    local errors = table.concat(error_chunks, "")
 
-      local output = table.concat(output_lines, "\n")
-      local errors = table.concat(error_lines, "\n")
+    if code ~= 0 then
+      safe_callback({
+        error = self:parse_error(errors ~= "" and errors or output, code),
+        exit_code = code,
+      })
+      return
+    end
 
-      if exit_code ~= 0 then
-        safe_callback({
-          error = self:parse_error(errors, exit_code),
-          exit_code = exit_code,
-        })
-        return
-      end
+    local result = self:parse_output(output)
+    safe_callback(result)
+  end)
 
-      local result = self:parse_output(output)
-      safe_callback(result)
-    end,
-  })
+  self.handle = handle
+
+  stdout:read_start(function(err, data)
+    if err then return end
+    if data then
+      table.insert(output_chunks, data)
+    end
+  end)
+
+  stderr:read_start(function(err, data)
+    if err then return end
+    if data then
+      table.insert(error_chunks, data)
+    end
+  end)
 
   if self.opts.timeout > 0 then
     self.timeout_timer = vim.defer_fn(function()
-      if self.job then
-        vim.fn.jobstop(self.job)
-        self.job = nil
+      if self.handle then
+        self.handle:kill("sigterm")
+        self.handle = nil
         safe_callback({ error = "Request timed out", timed_out = true })
       end
     end, self.opts.timeout)
@@ -224,7 +233,10 @@ end
 
 function Claude:cancel()
   self.timeout_timer = nil
-  Base.cancel(self)
+  if self.handle then
+    self.handle:kill("sigterm")
+    self.handle = nil
+  end
 end
 
 return Claude
