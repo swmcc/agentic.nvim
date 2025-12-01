@@ -47,15 +47,18 @@ end
 ---@param prompt string The prompt to send
 ---@param context table Context information
 ---@param callback fun(result: table) Callback with result
-function Gemini:ask(prompt, context, callback)
+---@param on_chunk? fun(chunk: string) Optional callback for streaming chunks
+function Gemini:ask(prompt, context, callback, on_chunk)
   if not self:is_available() then
     callback({ error = "Gemini CLI not found. Please install gemini-cli." })
     return
   end
 
   local args = self:build_args(prompt, context)
-  local output_lines = {}
-  local error_lines = {}
+  local stdout = vim.loop.new_pipe(false)
+  local stderr = vim.loop.new_pipe(false)
+  local output_chunks = {}
+  local error_chunks = {}
   local callback_called = false
 
   local function safe_callback(result)
@@ -66,52 +69,57 @@ function Gemini:ask(prompt, context, callback)
     end)
   end
 
-  self.job = vim.fn.jobstart(
-    vim.list_extend({ self.opts.cmd }, args),
-    {
-      on_stdout = function(_, data)
-        if data then
-          for _, line in ipairs(data) do
-            if line ~= "" then
-              table.insert(output_lines, line)
-            end
-          end
-        end
-      end,
-      on_stderr = function(_, data)
-        if data then
-          for _, line in ipairs(data) do
-            if line ~= "" then
-              table.insert(error_lines, line)
-            end
-          end
-        end
-      end,
-      on_exit = function(_, exit_code)
-        self.job = nil
+  local handle
+  handle, _ = vim.loop.spawn(self.opts.cmd, {
+    args = args,
+    stdio = { nil, stdout, stderr },
+  }, function(code)
+    stdout:close()
+    stderr:close()
+    handle:close()
+    self.handle = nil
 
-        if exit_code ~= 0 then
-          safe_callback({
-            error = table.concat(error_lines, "\n"),
-            exit_code = exit_code,
-          })
-          return
-        end
+    local output = table.concat(output_chunks, "")
+    local errors = table.concat(error_chunks, "")
 
-        local output = table.concat(output_lines, "\n")
-        local result = self:parse_output(output)
-        safe_callback(result)
-      end,
-      stdout_buffered = false,
-      stderr_buffered = false,
-    }
-  )
+    if code ~= 0 then
+      safe_callback({
+        error = errors ~= "" and errors or "Command failed",
+        exit_code = code,
+      })
+      return
+    end
+
+    local result = self:parse_output(output)
+    safe_callback(result)
+  end)
+
+  self.handle = handle
+
+  stdout:read_start(function(err, data)
+    if err then return end
+    if data then
+      table.insert(output_chunks, data)
+      if on_chunk then
+        vim.schedule(function()
+          on_chunk(data)
+        end)
+      end
+    end
+  end)
+
+  stderr:read_start(function(err, data)
+    if err then return end
+    if data then
+      table.insert(error_chunks, data)
+    end
+  end)
 
   if self.opts.timeout > 0 then
     self.timeout_timer = vim.defer_fn(function()
-      if self.job then
-        vim.fn.jobstop(self.job)
-        self.job = nil
+      if self.handle then
+        self.handle:kill("sigterm")
+        self.handle = nil
         safe_callback({ error = "Request timed out", timed_out = true })
       end
     end, self.opts.timeout)
@@ -199,6 +207,14 @@ function Gemini:run_workflow(workflow_name, state, callback)
   end
 
   self:ask(full_prompt, state.context or {}, callback)
+end
+
+function Gemini:cancel()
+  self.timeout_timer = nil
+  if self.handle then
+    self.handle:kill("sigterm")
+    self.handle = nil
+  end
 end
 
 return Gemini

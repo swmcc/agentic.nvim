@@ -126,6 +126,63 @@ function M.show_response(content)
   set_float_keymaps(buf)
 end
 
+function M.show_loading()
+  close_float()
+
+  local buf, win = create_float({
+    title = "Pamoja",
+    filetype = "markdown",
+  })
+
+  state.buf = buf
+  state.win = win
+  state.streaming = true
+
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "", "  Waiting for response..." })
+
+  set_float_keymaps(buf)
+
+  return buf
+end
+
+function M.stream_chunk(chunk)
+  local buf = state.buf
+  if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
+  if not state.streaming then return end
+
+  vim.bo[buf].modifiable = true
+
+  local first_line = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
+  if first_line:match("Waiting for response") then
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, {})
+  end
+
+  local lines = vim.split(chunk, "\n")
+  local line_count = vim.api.nvim_buf_line_count(buf)
+  local last_line = vim.api.nvim_buf_get_lines(buf, line_count - 1, line_count, false)[1] or ""
+
+  if #lines > 0 then
+    lines[1] = last_line .. lines[1]
+    vim.api.nvim_buf_set_lines(buf, line_count - 1, line_count, false, { lines[1] })
+    if #lines > 1 then
+      vim.api.nvim_buf_set_lines(buf, -1, -1, false, vim.list_slice(lines, 2))
+    end
+  end
+
+  if state.win and vim.api.nvim_win_is_valid(state.win) then
+    local new_count = vim.api.nvim_buf_line_count(buf)
+    vim.api.nvim_win_set_cursor(state.win, { new_count, 0 })
+  end
+end
+
+function M.finish_streaming()
+  local buf = state.buf
+  if buf and vim.api.nvim_buf_is_valid(buf) then
+    vim.bo[buf].modifiable = false
+  end
+  state.streaming = false
+end
+
 function M.show_error(message)
   vim.notify(message, vim.log.levels.ERROR, { title = "Pamoja" })
 end

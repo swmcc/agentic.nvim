@@ -119,31 +119,26 @@ function M.ask(opts, callback)
     return
   end
 
-  -- Build context
   local ctx = M.get_context(opts.context or {})
 
-  -- Create output buffer
-  local output_buf = ui.create_output_buffer({
-    title = "Agentic Response",
-    output = opts.output or config.get("ui.output"),
-  })
+  ui.show_loading()
 
-  -- Track the job
   current_job = {
     type = "ask",
-    buffer = output_buf,
   }
 
-  -- Send request to adapter
+  local function on_chunk(chunk)
+    ui.stream_chunk(chunk)
+  end
+
   adapter:ask(opts.prompt, ctx, function(result)
     current_job = nil
+    ui.finish_streaming()
 
     if result.error then
       ui.show_error(result.error)
       return
     end
-
-    ui.show_response(result.content)
 
     if opts.apply_changes and result.changes then
       M.apply_changes(result)
@@ -152,7 +147,7 @@ function M.ask(opts, callback)
     if callback then
       callback(result)
     end
-  end)
+  end, on_chunk)
 end
 
 ---@class PlanOpts

@@ -75,7 +75,8 @@ end
 ---@param prompt string The prompt to send
 ---@param context table Context information
 ---@param callback fun(result: table) Callback with result
-function Claude:ask(prompt, context, callback)
+---@param on_chunk? fun(chunk: string) Optional callback for streaming chunks
+function Claude:ask(prompt, context, callback, on_chunk)
   if not self:is_available() then
     callback({ error = "Claude CLI not found. Please install claude-code." })
     return
@@ -127,6 +128,11 @@ function Claude:ask(prompt, context, callback)
     if err then return end
     if data then
       table.insert(output_chunks, data)
+      if on_chunk then
+        vim.schedule(function()
+          on_chunk(data)
+        end)
+      end
     end
   end)
 
