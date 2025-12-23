@@ -70,7 +70,7 @@ function Gemini:ask(prompt, context, callback, on_chunk)
   end
 
   local handle
-  handle, _ = vim.loop.spawn(self.opts.cmd, {
+  handle = vim.loop.spawn(self.opts.cmd, {
     args = args,
     stdio = { nil, stdout, stderr },
   }, function(code)
