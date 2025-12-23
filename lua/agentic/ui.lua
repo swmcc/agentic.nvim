@@ -1,7 +1,5 @@
 local M = {}
 
-local config = require("agentic.config")
-
 local state = {
   win = nil,
   buf = nil,
