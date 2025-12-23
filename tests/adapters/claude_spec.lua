@@ -33,9 +33,9 @@ describe("Claude adapter", function()
   end)
 
   describe("build_args", function()
-    it("includes --print flag", function()
+    it("includes -p flag for print mode", function()
       local args = adapter:build_args("test prompt", {})
-      assert.is_true(vim.tbl_contains(args, "--print"))
+      assert.is_true(vim.tbl_contains(args, "-p"))
     end)
 
     it("includes the prompt as last argument", function()
@@ -67,38 +67,22 @@ describe("Claude adapter", function()
       assert.equals("Hello world", result.content)
     end)
 
-    it("extracts code blocks", function()
+    it("does not extract code blocks (uses streaming JSON)", function()
       local output = [[
 Some text here
 ```lua
 local x = 1
 ```
-More text
-```python
-print("hello")
-```
 ]]
       local result = adapter:parse_output(output)
-      assert.equals(2, #result.code_blocks)
-      assert.equals("lua", result.code_blocks[1].language)
-      assert.equals("local x = 1", result.code_blocks[1].content)
-      assert.equals("python", result.code_blocks[2].language)
-    end)
-
-    it("handles code blocks without language", function()
-      local output = [[
-```
-plain code
-```
-]]
-      local result = adapter:parse_output(output)
-      assert.equals(1, #result.code_blocks)
-      assert.is_nil(result.code_blocks[1].language)
-    end)
-
-    it("returns nil code_blocks when none found", function()
-      local result = adapter:parse_output("No code blocks here")
+      -- Base adapter parse_output doesn't extract code blocks
       assert.is_nil(result.code_blocks)
+    end)
+
+    it("includes stream-json output format flag", function()
+      local args = adapter:build_args("test", {})
+      assert.is_true(vim.tbl_contains(args, "--output-format"))
+      assert.is_true(vim.tbl_contains(args, "stream-json"))
     end)
   end)
 
@@ -152,10 +136,10 @@ plain code
   end)
 
   describe("cancel", function()
-    it("clears job reference", function()
-      adapter.job = 123
+    it("clears handle reference", function()
+      adapter.handle = { kill = function() end }
       adapter:cancel()
-      assert.is_nil(adapter.job)
+      assert.is_nil(adapter.handle)
     end)
 
     it("clears timeout timer", function()
