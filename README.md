@@ -36,6 +36,9 @@ One interface. Multiple agents. Working *pamoja*.
 
 ## Installation
 
+> **See the [Wiki](https://github.com/swmcc/agentic.nvim/wiki) for detailed setup guides:**
+> - [LazyVim Setup](https://github.com/swmcc/agentic.nvim/wiki/LazyVim-Setup) - Local development and testing
+
 ### lazy.nvim
 
 ```lua
