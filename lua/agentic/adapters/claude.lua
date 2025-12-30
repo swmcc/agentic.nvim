@@ -221,7 +221,11 @@ function Claude:ask(prompt, context, callback, on_event)
 end
 
 function Claude:cancel()
-  self.timeout_timer = nil
+  if self.timeout_timer then
+    self.timeout_timer:stop()
+    self.timeout_timer:close()
+    self.timeout_timer = nil
+  end
   if self.handle then
     self.handle:kill("sigterm")
     self.handle = nil
