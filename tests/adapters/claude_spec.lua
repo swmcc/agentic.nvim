@@ -142,9 +142,16 @@ local x = 1
       assert.is_nil(adapter.handle)
     end)
 
-    it("clears timeout timer", function()
-      adapter.timeout_timer = {}
+    it("stops and closes timeout timer", function()
+      local stop_called = false
+      local close_called = false
+      adapter.timeout_timer = {
+        stop = function() stop_called = true end,
+        close = function() close_called = true end,
+      }
       adapter:cancel()
+      assert.is_true(stop_called)
+      assert.is_true(close_called)
       assert.is_nil(adapter.timeout_timer)
     end)
 
@@ -161,6 +168,13 @@ local x = 1
 
     it("handles cancel when no handle exists", function()
       adapter.handle = nil
+      assert.has_no.errors(function()
+        adapter:cancel()
+      end)
+    end)
+
+    it("handles cancel when no timeout timer exists", function()
+      adapter.timeout_timer = nil
       assert.has_no.errors(function()
         adapter:cancel()
       end)
@@ -359,6 +373,104 @@ local x = 1
     it("accepts custom timeout value", function()
       local custom_adapter = Claude:new({ timeout = 60000 })
       assert.equals(60000, custom_adapter.opts.timeout)
+    end)
+
+    it("accepts zero timeout to disable", function()
+      local no_timeout_adapter = Claude:new({ timeout = 0 })
+      assert.equals(0, no_timeout_adapter.opts.timeout)
+    end)
+  end)
+
+  describe("timeout behavior", function()
+    it("sets timeout_timer when timeout > 0 and process starts", function()
+      -- This test verifies the timer is created by mocking the spawn
+      local original_executable = vim.fn.executable
+      local original_spawn = vim.loop.spawn
+      local original_defer = vim.defer_fn
+      local defer_called = false
+      local defer_timeout = nil
+
+      vim.fn.executable = function() return 1 end
+      vim.loop.spawn = function()
+        return { kill = function() end, close = function() end }
+      end
+      vim.defer_fn = function(fn, timeout)
+        defer_called = true
+        defer_timeout = timeout
+        return { stop = function() end, close = function() end }
+      end
+
+      local test_adapter = Claude:new({ timeout = 5000 })
+      test_adapter:ask("test", {}, function() end)
+
+      assert.is_true(defer_called)
+      assert.equals(5000, defer_timeout)
+
+      vim.fn.executable = original_executable
+      vim.loop.spawn = original_spawn
+      vim.defer_fn = original_defer
+    end)
+
+    it("does not set timeout_timer when timeout is 0", function()
+      local original_executable = vim.fn.executable
+      local original_spawn = vim.loop.spawn
+      local original_defer = vim.defer_fn
+      local defer_called = false
+
+      vim.fn.executable = function() return 1 end
+      vim.loop.spawn = function()
+        return { kill = function() end, close = function() end }
+      end
+      vim.defer_fn = function(fn, timeout)
+        defer_called = true
+        return { stop = function() end, close = function() end }
+      end
+
+      local test_adapter = Claude:new({ timeout = 0 })
+      test_adapter:ask("test", {}, function() end)
+
+      assert.is_false(defer_called)
+
+      vim.fn.executable = original_executable
+      vim.loop.spawn = original_spawn
+      vim.defer_fn = original_defer
+    end)
+
+    it("timeout callback includes timed_out flag", function()
+      -- Verify the callback structure when timeout occurs
+      local original_executable = vim.fn.executable
+      local original_spawn = vim.loop.spawn
+      local original_defer = vim.defer_fn
+      local original_schedule = vim.schedule
+      local captured_timeout_fn = nil
+      local callback_result = nil
+
+      vim.fn.executable = function() return 1 end
+      vim.loop.spawn = function()
+        return { kill = function() end, close = function() end }
+      end
+      vim.defer_fn = function(fn, timeout)
+        captured_timeout_fn = fn
+        return { stop = function() end, close = function() end }
+      end
+      vim.schedule = function(fn) fn() end
+
+      local test_adapter = Claude:new({ timeout = 5000 })
+      test_adapter:ask("test", {}, function(result) callback_result = result end)
+
+      -- Simulate timeout firing
+      if captured_timeout_fn then
+        captured_timeout_fn()
+      end
+
+      assert.is_truthy(callback_result)
+      assert.equals("Request timed out", callback_result.error)
+      assert.is_true(callback_result.timed_out)
+
+      vim.fn.executable = original_executable
+      vim.loop.spawn = original_spawn
+      vim.defer_fn = original_defer
+      vim.schedule = original_schedule
     end)
   end)
 end)
