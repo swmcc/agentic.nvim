@@ -42,23 +42,23 @@ function M.setup_keymaps(keymaps)
   local map = vim.keymap.set
 
   if keymaps.ask then
-    map("n", keymaps.ask, "<cmd>AgenticAsk<cr>", { desc = "Agentic: Ask" })
+    map("n", keymaps.ask, "<cmd>PamojaAsk<cr>", { desc = "Pamoja: Ask" })
   end
 
-  if keymaps.summarize then
-    map("v", keymaps.summarize, "<cmd>AgenticSummarize<cr>", { desc = "Agentic: Summarize" })
+  if keymaps.summarise then
+    map("v", keymaps.summarise, "<cmd>PamojaSummarise<cr>", { desc = "Pamoja: Summarise" })
   end
 
   if keymaps.refactor then
-    map({ "n", "v" }, keymaps.refactor, "<cmd>AgenticRefactor<cr>", { desc = "Agentic: Refactor" })
+    map({ "n", "v" }, keymaps.refactor, "<cmd>PamojaRefactor<cr>", { desc = "Pamoja: Refactor" })
   end
 
   if keymaps.generate then
-    map("n", keymaps.generate, "<cmd>AgenticGenerate<cr>", { desc = "Agentic: Generate" })
+    map("n", keymaps.generate, "<cmd>PamojaGenerate<cr>", { desc = "Pamoja: Generate" })
   end
 
   if keymaps.task then
-    map("n", keymaps.task, "<cmd>AgenticTask<cr>", { desc = "Agentic: Task" })
+    map("n", keymaps.task, "<cmd>PamojaTask<cr>", { desc = "Pamoja: Task" })
   end
 end
 

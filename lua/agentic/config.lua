@@ -49,7 +49,7 @@ function M.setup(opts)
   -- Validate provider
   if not current.providers[active_provider] then
     vim.notify(
-      string.format("Agentic: Unknown provider '%s', falling back to claude", active_provider),
+      string.format("Pamoja: Unknown provider '%s', falling back to claude", active_provider),
       vim.log.levels.WARN
     )
     active_provider = "claude"
@@ -83,7 +83,7 @@ end
 ---@param provider string Provider name
 function M.set_provider(provider)
   if not current.providers[provider] then
-    vim.notify(string.format("Agentic: Unknown provider '%s'", provider), vim.log.levels.ERROR)
+    vim.notify(string.format("Pamoja: Unknown provider '%s'", provider), vim.log.levels.ERROR)
     return
   end
   active_provider = provider

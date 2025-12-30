@@ -115,7 +115,7 @@ end
 ---@param callback? fun(result: table) Optional callback for result
 function M.ask(opts, callback)
   if not adapter then
-    vim.notify("Agentic: No provider configured", vim.log.levels.ERROR)
+    vim.notify("Pamoja: No provider configured", vim.log.levels.ERROR)
     return
   end
 
@@ -159,7 +159,7 @@ end
 ---@param callback fun(plan: table)
 function M.plan(opts, callback)
   if not adapter then
-    vim.notify("Agentic: No provider configured", vim.log.levels.ERROR)
+    vim.notify("Pamoja: No provider configured", vim.log.levels.ERROR)
     return
   end
 
@@ -191,7 +191,7 @@ end
 ---@param result ApplyChangesResult
 function M.apply_changes(result)
   if not result.changes or #result.changes == 0 then
-    vim.notify("Agentic: No changes to apply", vim.log.levels.INFO)
+    vim.notify("Pamoja: No changes to apply", vim.log.levels.INFO)
     return
   end
 
@@ -201,7 +201,7 @@ function M.apply_changes(result)
       if confirmed then
         M._do_apply_changes(result.changes)
       else
-        vim.notify("Agentic: Changes cancelled", vim.log.levels.INFO)
+        vim.notify("Pamoja: Changes cancelled", vim.log.levels.INFO)
       end
     end)
   else
@@ -249,7 +249,7 @@ function M._do_apply_changes(changes)
     end
   end
 
-  vim.notify(string.format("Agentic: Applied %d change(s)", #changes), vim.log.levels.INFO)
+  vim.notify(string.format("Pamoja: Applied %d change(s)", #changes), vim.log.levels.INFO)
 end
 
 ---@class WorkflowOpts
@@ -263,7 +263,7 @@ end
 ---@param callback? fun(result: table)
 function M.run_workflow(name, opts, callback)
   if not adapter then
-    vim.notify("Agentic: No provider configured", vim.log.levels.ERROR)
+    vim.notify("Pamoja: No provider configured", vim.log.levels.ERROR)
     return
   end
 
@@ -284,7 +284,7 @@ function M.cancel()
       adapter:cancel()
     end
     current_job = nil
-    vim.notify("Agentic: Operation cancelled", vim.log.levels.INFO)
+    vim.notify("Pamoja: Operation cancelled", vim.log.levels.INFO)
   end
 end
 
@@ -305,7 +305,7 @@ function M.summarize(opts)
   local ctx = M.get_context({ selection = true })
 
   if not ctx.selection then
-    vim.notify("Agentic: No selection", vim.log.levels.WARN)
+    vim.notify("Pamoja: No selection", vim.log.levels.WARN)
     return
   end
 

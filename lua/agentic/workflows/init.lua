@@ -36,7 +36,7 @@ function M.run(name, opts, callback)
   local workflow = workflows[name]
 
   if not workflow then
-    vim.notify(string.format("Agentic: Unknown workflow '%s'", name), vim.log.levels.ERROR)
+    vim.notify(string.format("Pamoja: Unknown workflow '%s'", name), vim.log.levels.ERROR)
     if callback then
       callback({ error = "Unknown workflow" })
     end
@@ -79,7 +79,7 @@ function M._execute_step()
   local handler = workflow.handlers[step_name]
   if not handler then
     vim.notify(
-      string.format("Agentic: Missing handler for step '%s'", step_name),
+      string.format("Pamoja: Missing handler for step '%s'", step_name),
       vim.log.levels.ERROR
     )
     M._fail_workflow("Missing step handler")

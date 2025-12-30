@@ -95,8 +95,8 @@ Implement the adapter for Gemini CLI.
 Implement runtime switching between Claude and Gemini providers.
 
 **Acceptance Criteria:**
-- [ ] `:AgenticUse claude` switches to Claude
-- [ ] `:AgenticUse gemini` switches to Gemini
+- [ ] `:PamojaUse claude` switches to Claude
+- [ ] `:PamojaUse gemini` switches to Gemini
 - [ ] Current operation cancelled on switch
 - [ ] User notified of switch
 - [ ] Tab completion works for provider names
@@ -135,15 +135,15 @@ Implement the basic ask workflow for Q&A operations.
 
 ---
 
-### Issue #9: Implement summarize workflow
+### Issue #9: Implement summarise workflow
 **Labels:** `🔄 workflow`, `🚀 mvp`
 
 **Description:**
-Implement the summarize workflow for text summarization.
+Implement the summarise workflow for text summarization.
 
 **Acceptance Criteria:**
 - [ ] Accepts visual selection
-- [ ] Sends selection with summarize prompt
+- [ ] Sends selection with summarise prompt
 - [ ] Output displays in float window
 - [ ] Works with both providers
 
@@ -256,34 +256,34 @@ Implement confirmation dialogs using vim.ui.select.
 
 ## Command Issues
 
-### Issue #17: Implement :AgenticAsk command
+### Issue #17: Implement :PamojaAsk command
 **Labels:** `🤓 lua`, `🚀 mvp`
 
 **Description:**
 Implement the ask command for querying the agent.
 
 **Acceptance Criteria:**
-- [ ] `:AgenticAsk prompt` works inline
-- [ ] `:AgenticAsk` opens prompt input
+- [ ] `:PamojaAsk prompt` works inline
+- [ ] `:PamojaAsk` opens prompt input
 - [ ] Context gathered from current buffer
 - [ ] Output displayed in split
 
 ---
 
-### Issue #18: Implement :AgenticSummarize command
+### Issue #18: Implement :PamojaSummarise command
 **Labels:** `🤓 lua`, `🚀 mvp`
 
 **Description:**
-Implement the summarize command for visual selections.
+Implement the summarise command for visual selections.
 
 **Acceptance Criteria:**
 - [ ] Works with visual selection
-- [ ] `:' <,'>AgenticSummarize` works
+- [ ] `:' <,'>AgenticSummarise` works
 - [ ] Output displayed in float
 
 ---
 
-### Issue #19: Implement :AgenticRefactor command
+### Issue #19: Implement :PamojaRefactor command
 **Labels:** `🤓 lua`, `🚀 mvp`
 
 **Description:**
@@ -298,7 +298,7 @@ Implement the refactor command.
 
 ---
 
-### Issue #20: Implement :AgenticGenerate command
+### Issue #20: Implement :PamojaGenerate command
 **Labels:** `🤓 lua`, `🚀 mvp`
 
 **Description:**
@@ -311,7 +311,7 @@ Implement the generate command.
 
 ---
 
-### Issue #21: Implement :AgenticTask command
+### Issue #21: Implement :PamojaTask command
 **Labels:** `🤓 lua`, `🚀 mvp`
 
 **Description:**
@@ -325,7 +325,7 @@ Implement the multi-step task command.
 
 ---
 
-### Issue #22: Implement :AgenticStatus command
+### Issue #22: Implement :PamojaStatus command
 **Labels:** `🤓 lua`, `🚀 mvp`
 
 **Description:**
@@ -338,7 +338,7 @@ Implement the status command.
 
 ---
 
-### Issue #23: Implement :AgenticCancel command
+### Issue #23: Implement :PamojaCancel command
 **Labels:** `🤓 lua`, `🚀 mvp`
 
 **Description:**
