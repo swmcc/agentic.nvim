@@ -11,8 +11,8 @@ local ui = require("agentic.ui")
 
 --- Register all user commands
 function M.register()
-  -- :AgenticAsk [prompt]
-  vim.api.nvim_create_user_command("AgenticAsk", function(opts)
+  -- :PamojaAsk [prompt]
+  vim.api.nvim_create_user_command("PamojaAsk", function(opts)
     local prompt = opts.args
 
     if prompt == "" then
@@ -34,18 +34,18 @@ function M.register()
     desc = "Ask the AI agent a question",
   })
 
-  -- :AgenticSummarize (visual mode)
-  vim.api.nvim_create_user_command("AgenticSummarize", function(opts)
+  -- :PamojaSummarise (visual mode)
+  vim.api.nvim_create_user_command("PamojaSummarise", function(opts)
     api.summarize({
       use_selection = opts.range > 0,
     })
   end, {
     range = true,
-    desc = "Summarize selected text",
+    desc = "Summarise selected text",
   })
 
-  -- :AgenticRefactor [instruction]
-  vim.api.nvim_create_user_command("AgenticRefactor", function(opts)
+  -- :PamojaRefactor [instruction]
+  vim.api.nvim_create_user_command("PamojaRefactor", function(opts)
     local instruction = opts.args
 
     if instruction == "" then
@@ -73,8 +73,8 @@ function M.register()
     desc = "Refactor code with instruction",
   })
 
-  -- :AgenticGenerate [description]
-  vim.api.nvim_create_user_command("AgenticGenerate", function(opts)
+  -- :PamojaGenerate [description]
+  vim.api.nvim_create_user_command("PamojaGenerate", function(opts)
     local description = opts.args
 
     if description == "" then
@@ -95,8 +95,8 @@ function M.register()
     desc = "Generate new code",
   })
 
-  -- :AgenticTask [description]
-  vim.api.nvim_create_user_command("AgenticTask", function(opts)
+  -- :PamojaTask [description]
+  vim.api.nvim_create_user_command("PamojaTask", function(opts)
     local description = opts.args
 
     if description == "" then
@@ -123,8 +123,8 @@ function M.register()
     desc = "Run a multi-step task",
   })
 
-  -- :AgenticUse {provider}
-  vim.api.nvim_create_user_command("AgenticUse", function(opts)
+  -- :PamojaUse {provider}
+  vim.api.nvim_create_user_command("PamojaUse", function(opts)
     local provider = opts.args
 
     if provider == "" then
@@ -147,8 +147,8 @@ function M.register()
     desc = "Switch AI provider",
   })
 
-  -- :AgenticStatus
-  vim.api.nvim_create_user_command("AgenticStatus", function()
+  -- :PamojaStatus
+  vim.api.nvim_create_user_command("PamojaStatus", function()
     local provider = api.get_current_provider()
     local ready = api.is_ready()
     local status = ready and "ready" or "not available"
@@ -157,8 +157,8 @@ function M.register()
     desc = "Show current provider status",
   })
 
-  -- :AgenticCancel
-  vim.api.nvim_create_user_command("AgenticCancel", function()
+  -- :PamojaCancel
+  vim.api.nvim_create_user_command("PamojaCancel", function()
     api.cancel()
   end, {
     desc = "Cancel running operation",

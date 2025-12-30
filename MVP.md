@@ -12,7 +12,7 @@ The Minimum Viable Product (MVP) for agentic.nvim provides core agentic capabili
 
 **User Flow**:
 ```
-1. User types :AgenticAsk "How do I optimize this loop?"
+1. User types :PamojaAsk "How do I optimize this loop?"
 2. Plugin gathers current buffer context (filename, filetype, visible lines)
 3. Request is sent to active provider (Claude or Gemini)
 4. Response streams into a split buffer
@@ -20,8 +20,8 @@ The Minimum Viable Product (MVP) for agentic.nvim provides core agentic capabili
 ```
 
 **Commands**:
-- `:AgenticAsk [prompt]` - Ask with inline prompt
-- `:AgenticAsk` - Open prompt input buffer
+- `:PamojaAsk [prompt]` - Ask with inline prompt
+- `:PamojaAsk` - Open prompt input buffer
 
 **API**:
 ```lua
@@ -31,25 +31,25 @@ api.ask({
 })
 ```
 
-### 2. Summarize Selection
+### 2. Summarise Selection
 
-**Description**: Summarize visually selected text using the active provider.
+**Description**: Summarise visually selected text using the active provider.
 
 **User Flow**:
 ```
 1. User visually selects code or text
-2. User types :'<,'>AgenticSummarize
+2. User types :'<,'>AgenticSummarise
 3. Selection is sent to provider with summarization prompt
 4. Summary appears in floating window or split
 ```
 
 **Commands**:
-- `:'<,'>AgenticSummarize` - Summarize visual selection
+- `:'<,'>AgenticSummarise` - Summarise visual selection
 
 **API**:
 ```lua
 api.ask({
-  prompt = "Summarize the following code:",
+  prompt = "Summarise the following code:",
   context = { selection = true },
   workflow = "summarize",
 })
@@ -62,7 +62,7 @@ api.ask({
 **User Flow**:
 ```
 1. User selects code (optional)
-2. User types :AgenticRefactor "Extract into separate function"
+2. User types :PamojaRefactor "Extract into separate function"
 3. Provider returns structured refactor instructions
 4. Plugin displays diff preview
 5. User confirms application
@@ -70,7 +70,7 @@ api.ask({
 ```
 
 **Commands**:
-- `:AgenticRefactor [instruction]` - Refactor with instruction
+- `:PamojaRefactor [instruction]` - Refactor with instruction
 - `:'<,'>AgenticRefactor [instruction]` - Refactor selection
 
 **API**:
@@ -89,14 +89,14 @@ api.ask({
 
 **User Flow**:
 ```
-1. User types :AgenticGenerate "Create a Lua function that parses JSON"
+1. User types :PamojaGenerate "Create a Lua function that parses JSON"
 2. Provider generates code
 3. New buffer opens with generated code
 4. Buffer has appropriate filetype set
 ```
 
 **Commands**:
-- `:AgenticGenerate [description]` - Generate code
+- `:PamojaGenerate [description]` - Generate code
 
 **API**:
 ```lua
@@ -113,7 +113,7 @@ api.ask({
 
 **User Flow**:
 ```
-1. User types :AgenticTask "Rename all instances of User to Account"
+1. User types :PamojaTask "Rename all instances of User to Account"
 2. Provider returns a plan listing affected files
 3. Plugin displays plan in preview buffer
 4. User confirms to proceed
@@ -125,7 +125,7 @@ api.ask({
 ```
 
 **Commands**:
-- `:AgenticTask [description]` - Run multi-step task
+- `:PamojaTask [description]` - Run multi-step task
 
 **API**:
 ```lua
@@ -141,16 +141,16 @@ api.run_workflow("multi_file", {
 
 **User Flow**:
 ```
-1. User types :AgenticUse gemini
+1. User types :PamojaUse gemini
 2. Plugin switches active provider to Gemini
 3. Confirmation message displayed
 4. Subsequent commands use Gemini
 ```
 
 **Commands**:
-- `:AgenticUse claude` - Switch to Claude
-- `:AgenticUse gemini` - Switch to Gemini
-- `:AgenticStatus` - Show current provider
+- `:PamojaUse claude` - Switch to Claude
+- `:PamojaUse gemini` - Switch to Gemini
+- `:PamojaStatus` - Show current provider
 
 **API**:
 ```lua
@@ -162,14 +162,14 @@ api.get_current_provider() -- returns "gemini"
 
 | Command | Description |
 |---------|-------------|
-| `:AgenticAsk [prompt]` | Ask the agent a question |
-| `:AgenticSummarize` | Summarize selected text |
-| `:AgenticRefactor [instruction]` | Refactor code |
-| `:AgenticGenerate [description]` | Generate new code |
-| `:AgenticTask [description]` | Run multi-step task |
-| `:AgenticUse {provider}` | Switch provider |
-| `:AgenticStatus` | Show status |
-| `:AgenticCancel` | Cancel current operation |
+| `:PamojaAsk [prompt]` | Ask the agent a question |
+| `:PamojaSummarise` | Summarise selected text |
+| `:PamojaRefactor [instruction]` | Refactor code |
+| `:PamojaGenerate [description]` | Generate new code |
+| `:PamojaTask [description]` | Run multi-step task |
+| `:PamojaUse {provider}` | Switch provider |
+| `:PamojaStatus` | Show status |
+| `:PamojaCancel` | Cancel current operation |
 
 ## MVP Configuration
 

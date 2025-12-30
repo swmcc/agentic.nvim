@@ -16,7 +16,7 @@ agentic.nvim is a dual-agent agentic workflow plugin for Neovim that supports bo
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        User Commands                             │
-│  :AgenticAsk  :AgenticRefactor  :AgenticTask  :AgenticUse       │
+│  :PamojaAsk  :PamojaRefactor  :PamojaTask  :PamojaUse       │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -156,7 +156,7 @@ Manages complex multi-step agentic workflows:
 | Workflow | Description |
 |----------|-------------|
 | `ask` | Simple question-answer |
-| `summarize` | Summarize selected text |
+| `summarize` | Summarise selected text |
 | `refactor` | Apply structured refactoring |
 | `generate` | Generate code into new buffer |
 | `multi_file` | Coordinate multi-file operations |
@@ -186,19 +186,19 @@ Registers and handles all user-facing commands:
 
 | Command | Description |
 |---------|-------------|
-| `:AgenticAsk [prompt]` | Ask the agent a question |
-| `:AgenticRefactor [instruction]` | Refactor selected code |
-| `:AgenticTask [description]` | Run a complex task workflow |
-| `:AgenticUse {claude\|gemini}` | Switch active provider |
-| `:AgenticStatus` | Show current provider and status |
-| `:AgenticCancel` | Cancel running operation |
+| `:PamojaAsk [prompt]` | Ask the agent a question |
+| `:PamojaRefactor [instruction]` | Refactor selected code |
+| `:PamojaTask [description]` | Run a complex task workflow |
+| `:PamojaUse {claude\|gemini}` | Switch active provider |
+| `:PamojaStatus` | Show current provider and status |
+| `:PamojaCancel` | Cancel running operation |
 
 ## Data Flow
 
 ### Ask Operation
 
 ```
-1. User: :AgenticAsk "How do I fix this?"
+1. User: :PamojaAsk "How do I fix this?"
 2. commands.lua: Parse command, extract prompt
 3. api.ask(): Build context, call adapter
 4. adapter:ask(): Spawn CLI process, stream output
@@ -209,7 +209,7 @@ Registers and handles all user-facing commands:
 ### Refactor Operation
 
 ```
-1. User: Selects code, :AgenticRefactor "Extract function"
+1. User: Selects code, :PamojaRefactor "Extract function"
 2. commands.lua: Parse command, get visual selection
 3. api.ask(): Build context with selection, call adapter
 4. adapter:ask(): Request structured refactor response
@@ -222,7 +222,7 @@ Registers and handles all user-facing commands:
 ### Multi-File Operation
 
 ```
-1. User: :AgenticTask "Rename User to Account across codebase"
+1. User: :PamojaTask "Rename User to Account across codebase"
 2. commands.lua: Parse command
 3. api.run_workflow("multi_file"): Initialize workflow state
 4. workflows: Execute planning step
@@ -270,7 +270,7 @@ Multi-file operations use a staged approach:
 
 ```lua
 -- Runtime provider switch
-:AgenticUse gemini
+:PamojaUse gemini
 
 -- Internally:
 1. config.set_provider("gemini")
