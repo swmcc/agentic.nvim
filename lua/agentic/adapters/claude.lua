@@ -153,8 +153,8 @@ function Claude:ask(prompt, context, callback, on_event)
     end
 
     if on_event then
-      local formatted = self:format_event(event)
-      if formatted then
+      local format_ok, formatted = pcall(self.format_event, self, event)
+      if format_ok and formatted then
         vim.schedule(function()
           on_event(formatted)
         end)
