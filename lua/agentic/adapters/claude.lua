@@ -156,8 +156,8 @@ function Claude:ask(prompt, context, callback, on_event)
     end
   end
 
-  local handle
-  handle = vim.loop.spawn(self.opts.cmd, {
+  local handle, spawn_err
+  handle, spawn_err = vim.loop.spawn(self.opts.cmd, {
     args = args,
     stdio = { nil, stdout, stderr },
   }, function(code)
@@ -185,6 +185,15 @@ function Claude:ask(prompt, context, callback, on_event)
       error = nil,
     })
   end)
+
+  if not handle then
+    stdout:close()
+    stderr:close()
+    safe_callback({
+      error = string.format("Failed to spawn claude: %s", spawn_err or "unknown error"),
+    })
+    return
+  end
 
   self.handle = handle
 

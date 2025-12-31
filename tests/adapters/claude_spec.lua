@@ -133,6 +133,26 @@ local x = 1
 
       vim.fn.executable = original
     end)
+
+    it("returns error when spawn fails", function()
+      local original_executable = vim.fn.executable
+      local original_spawn = vim.loop.spawn
+      local original_schedule = vim.schedule
+
+      vim.fn.executable = function() return 1 end
+      vim.loop.spawn = function() return nil, "spawn failed" end
+      vim.schedule = function(fn) fn() end
+
+      local result
+      adapter:ask("test", {}, function(r) result = r end)
+
+      assert.is_truthy(result.error)
+      assert.is_truthy(result.error:match("Failed to spawn"))
+
+      vim.fn.executable = original_executable
+      vim.loop.spawn = original_spawn
+      vim.schedule = original_schedule
+    end)
   end)
 
   describe("cancel", function()
