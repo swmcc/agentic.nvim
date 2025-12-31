@@ -335,6 +335,16 @@ local x = 1
       assert.is_truthy(result:match("truncated"))
     end)
 
+    it("handles non-string tool_use_result", function()
+      local event = {
+        type = "user",
+        tool_use_result = { content = "test", success = true },
+      }
+      local result = adapter:format_event(event)
+      assert.is_truthy(result:match("```"))
+      assert.is_truthy(result:match("content"))
+    end)
+
     it("formats result event with duration and cost", function()
       local event = {
         type = "result",
