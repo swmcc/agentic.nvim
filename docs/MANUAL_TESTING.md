@@ -178,6 +178,8 @@ Should print: `claude` or `gemini`
 |-----|--------|
 | `q` | Close float window |
 | `Esc` | Close float window |
+| `v` | Promote float to vertical split |
+| `s` | Promote float to horizontal split |
 | `y` | Accept (in confirmation dialogs) |
 | `n` | Reject (in confirmation dialogs) |
 | `Enter` | Submit (in prompt input) |
