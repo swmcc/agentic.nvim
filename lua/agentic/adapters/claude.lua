@@ -49,6 +49,7 @@ function Claude:build_args(prompt, context)
   table.insert(args, "-p")
   table.insert(args, "--output-format")
   table.insert(args, "stream-json")
+  table.insert(args, "--verbose")
 
   local full_prompt = self:format_context(context) .. prompt
   table.insert(args, full_prompt)

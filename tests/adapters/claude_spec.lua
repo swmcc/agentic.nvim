@@ -79,10 +79,11 @@ local x = 1
       assert.is_nil(result.code_blocks)
     end)
 
-    it("includes stream-json output format flag", function()
+    it("includes stream-json output format flag with verbose", function()
       local args = adapter:build_args("test", {})
       assert.is_true(vim.tbl_contains(args, "--output-format"))
       assert.is_true(vim.tbl_contains(args, "stream-json"))
+      assert.is_true(vim.tbl_contains(args, "--verbose"))
     end)
   end)
 
