@@ -55,6 +55,32 @@ local function close_float()
   state.input_buf = nil
 end
 
+local function promote_to_split(vertical)
+  local buf = state.buf
+  if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
+
+  -- Close float window but keep the buffer
+  if state.win and vim.api.nvim_win_is_valid(state.win) then
+    vim.api.nvim_win_close(state.win, false)
+  end
+  state.win = nil
+
+  -- Open buffer in a split
+  if vertical then
+    vim.cmd("vsplit")
+  else
+    vim.cmd("split")
+  end
+  vim.api.nvim_win_set_buf(0, buf)
+
+  -- Set up keymaps for the split (just q to close)
+  vim.keymap.set("n", "q", function()
+    vim.cmd("close")
+  end, { buffer = buf, nowait = true })
+
+  state.buf = nil
+end
+
 local function set_float_keymaps(buf, on_close)
   local function close()
     close_float()
@@ -63,6 +89,8 @@ local function set_float_keymaps(buf, on_close)
 
   vim.keymap.set("n", "q", close, { buffer = buf, nowait = true })
   vim.keymap.set("n", "<Esc>", close, { buffer = buf, nowait = true })
+  vim.keymap.set("n", "v", function() promote_to_split(true) end, { buffer = buf, nowait = true, desc = "Promote to vertical split" })
+  vim.keymap.set("n", "s", function() promote_to_split(false) end, { buffer = buf, nowait = true, desc = "Promote to horizontal split" })
 end
 
 function M.create_output_buffer(opts)
