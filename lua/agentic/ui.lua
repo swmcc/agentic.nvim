@@ -150,8 +150,10 @@ function M.stream_chunk(chunk)
 
   vim.bo[buf].modifiable = true
 
-  local first_line = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] or ""
-  if first_line:match("Waiting") then
+  -- Clear "Waiting for response..." on first chunk
+  local all_lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  local content = table.concat(all_lines, "\n")
+  if content:match("Waiting") then
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, {})
   end
 
