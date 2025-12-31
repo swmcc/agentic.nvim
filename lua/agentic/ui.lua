@@ -145,8 +145,14 @@ end
 
 function M.stream_chunk(chunk)
   local buf = state.buf
-  if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
-  if not state.streaming then return end
+  if not buf or not vim.api.nvim_buf_is_valid(buf) then
+    vim.notify("Pamoja DEBUG: buf invalid", vim.log.levels.WARN)
+    return
+  end
+  if not state.streaming then
+    vim.notify("Pamoja DEBUG: not streaming", vim.log.levels.WARN)
+    return
+  end
 
   vim.bo[buf].modifiable = true
 

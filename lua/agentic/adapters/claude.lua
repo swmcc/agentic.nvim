@@ -141,7 +141,12 @@ function Claude:ask(prompt, context, callback, on_event)
     if line == "" then return end
 
     local ok, event = pcall(vim.fn.json_decode, line)
-    if not ok then return end
+    if not ok then
+      vim.schedule(function()
+        vim.notify("Pamoja: JSON parse failed: " .. line:sub(1, 100), vim.log.levels.DEBUG)
+      end)
+      return
+    end
 
     if event.type == "result" then
       final_result = event.result
@@ -149,6 +154,9 @@ function Claude:ask(prompt, context, callback, on_event)
 
     if on_event then
       local formatted = self:format_event(event)
+      vim.schedule(function()
+        vim.notify("Pamoja DEBUG: event type=" .. (event.type or "nil") .. ", formatted=" .. (formatted and "yes" or "no"), vim.log.levels.INFO)
+      end)
       if formatted then
         vim.schedule(function()
           on_event(formatted)
