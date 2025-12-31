@@ -97,6 +97,9 @@ function Claude:format_event(event)
 
   if event.type == "user" and event.tool_use_result then
     local result = event.tool_use_result
+    if type(result) ~= "string" then
+      result = vim.fn.json_encode(result)
+    end
     if result:match("^Error:") then
       return string.format("\n> %s\n", result)
     end
