@@ -79,10 +79,11 @@ local x = 1
       assert.is_nil(result.code_blocks)
     end)
 
-    it("includes stream-json output format flag", function()
+    it("includes stream-json output format flag with verbose", function()
       local args = adapter:build_args("test", {})
       assert.is_true(vim.tbl_contains(args, "--output-format"))
       assert.is_true(vim.tbl_contains(args, "stream-json"))
+      assert.is_true(vim.tbl_contains(args, "--verbose"))
     end)
   end)
 
@@ -132,6 +133,26 @@ local x = 1
       assert.is_truthy(result.error:match("not found"))
 
       vim.fn.executable = original
+    end)
+
+    it("returns error when spawn fails", function()
+      local original_executable = vim.fn.executable
+      local original_spawn = vim.loop.spawn
+      local original_schedule = vim.schedule
+
+      vim.fn.executable = function() return 1 end
+      vim.loop.spawn = function() return nil, "spawn failed" end
+      vim.schedule = function(fn) fn() end
+
+      local result
+      adapter:ask("test", {}, function(r) result = r end)
+
+      assert.is_truthy(result.error)
+      assert.is_truthy(result.error:match("Failed to spawn"))
+
+      vim.fn.executable = original_executable
+      vim.loop.spawn = original_spawn
+      vim.schedule = original_schedule
     end)
   end)
 

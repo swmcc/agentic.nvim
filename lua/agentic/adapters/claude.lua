@@ -49,6 +49,7 @@ function Claude:build_args(prompt, context)
   table.insert(args, "-p")
   table.insert(args, "--output-format")
   table.insert(args, "stream-json")
+  table.insert(args, "--verbose")
 
   local full_prompt = self:format_context(context) .. prompt
   table.insert(args, full_prompt)
@@ -139,8 +140,10 @@ function Claude:ask(prompt, context, callback, on_event)
   local function process_line(line)
     if line == "" then return end
 
-    local ok, event = pcall(vim.fn.json_decode, line)
-    if not ok then return end
+    local ok, event = pcall(vim.json.decode, line)
+    if not ok then
+      return
+    end
 
     if event.type == "result" then
       final_result = event.result
@@ -156,8 +159,8 @@ function Claude:ask(prompt, context, callback, on_event)
     end
   end
 
-  local handle
-  handle = vim.loop.spawn(self.opts.cmd, {
+  local handle, spawn_err
+  handle, spawn_err = vim.loop.spawn(self.opts.cmd, {
     args = args,
     stdio = { nil, stdout, stderr },
   }, function(code)
@@ -185,6 +188,15 @@ function Claude:ask(prompt, context, callback, on_event)
       error = nil,
     })
   end)
+
+  if not handle then
+    stdout:close()
+    stderr:close()
+    safe_callback({
+      error = string.format("Failed to spawn claude: %s", spawn_err or "unknown error"),
+    })
+    return
+  end
 
   self.handle = handle
 
